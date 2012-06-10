@@ -14,9 +14,9 @@
  *   http://www.gnu.org/licenses/gpl.html
  */
 
-(function($) {
+(function($, context) {
 
-  window.TooLegit = function($form, config) {
+  var TooLegit = function($form, config) {
     if (!$form.length) {
       return;
     }
@@ -236,4 +236,6 @@
     }
   });
 
-})(Zepto || jQuery);
+  context.TooLegit = TooLegit;
+
+})(Zepto || jQuery, window);
