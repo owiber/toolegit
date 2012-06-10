@@ -1,6 +1,8 @@
 (function( $ ) {
 
-  var defaultOptions = {
+  $.toolegit = {};
+
+  var defaultOptions = $.toolegit.defaultOptions = {
     errorClass : 'error',
     validClass : 'success',
     ignore : ['.ignore'],
@@ -16,7 +18,7 @@
     submit : null //function () { console.log('submit!'); }
   };
 
-  var defaultRules = {
+  var defaultRules = $.toolegit.defaultRules = {
     required : function ($el, required) {
       var noValue = $el.is(':radio, :checkbox') ? !$el.length : !$.trim($el.val());
       return (required && noValue) ? 'required' : false;
@@ -36,7 +38,7 @@
     }
   };
 
-  var defaultRuleSelectors = {
+  var defaultRuleSelectors = $.toolegit.defaultRuleSelectors = {
     // selector : { rule : param }
   };
 
@@ -210,7 +212,7 @@
     return new Validator(config || {}, $(this[0]));
   };
 
-  $.format = function(source, params) {
+  $.toolegit.format = $.format = function(source, params) {
     if ( arguments.length == 1 )
       return function() {
         var args = $.makeArray(arguments);
