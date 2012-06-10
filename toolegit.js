@@ -1,3 +1,19 @@
+/**
+ * toolegit.js - Basic Form Validation
+ * https://github.com/owiber/toolegit
+ *
+ * Copyright (c) 2012 Oliver Wong
+ *
+ * Inspired by:
+ * jQuery Validation Plugin 1.9.0
+ * http://bassistance.de/jquery-plugins/jquery-plugin-validation/
+ * http://docs.jquery.com/Plugins/Validation
+ *
+ * Dual licensed under the MIT and GPL licenses:
+ *   http://www.opensource.org/licenses/mit-license.php
+ *   http://www.gnu.org/licenses/gpl.html
+ */
+
 (function( $ ) {
 
   $.toolegit = {};
@@ -204,31 +220,11 @@
     }
   });
 
-
   $.fn.toolegit = function(config) {
     if (!this.length) {
       return;
     }
     return new Validator(config || {}, $(this[0]));
-  };
-
-  $.toolegit.format = $.format = function(source, params) {
-    if ( arguments.length == 1 )
-      return function() {
-        var args = $.makeArray(arguments);
-        args.unshift(source);
-        return $.validator.format.apply( this, args );
-      };
-    if ( arguments.length > 2 && params.constructor != Array  ) {
-      params = $.makeArray(arguments).slice(1);
-    }
-    if ( params.constructor != Array ) {
-      params = [ params ];
-    }
-    $.each(params, function(i, n) {
-      source = source.replace(new RegExp("\\{" + i + "\\}", "g"), n);
-    });
-    return source;
   };
 
 })(jQuery);
