@@ -1,6 +1,6 @@
 TooLegit.js
 ===========
-jQuery/Zepto plugin for simple form validation.
+JS library for simple form validation. Requires Zepto or jQuery.
 
 http://en.wikipedia.org/wiki/Too_Legit_to_Quit
 
@@ -39,7 +39,7 @@ $('#form1').toolegit({
     errorClass : 'error',
     validClass : 'valid',
     ignore : ['.ignore'],
-    onError : function ($el, rule) { 
+    onError : function ($el, rule) {
       // called whenever an error message is shown for a field
     },
     errorElement : function ($el) {
