@@ -11,18 +11,28 @@
       return $el.closest('.control-group');
     },
     counter : function ($el, min) {
-      return Math.max(0, min - $el.val().length) || '';
+      return Math.max(0, min - $.trim($el.val()).length) || '';
     },
     submit : null //function () { console.log('submit!'); }
   };
 
   var defaultRules = {
-    required : function ($el) {
-      return !$el.val() ? 'required' : false;
+    required : function ($el, required) {
+      var noValue = $el.is(':radio, :checkbox') ? !$el.length : !$.trim($el.val());
+      return (required && noValue) ? 'required' : false;
     },
-    minlength : function ($el, min) {
-      var diff = min - $el.val().length;
-      return (diff > 0) ? 'requires ' + diff + ' more character(s)' : false;
+    minlength : function ($el, min, otherRules) {
+      var length = $.trim($el.val()).length;
+      var diff = min - length;
+      var returnValue = (diff > 0) ? diff + ' character(s) too short' : false;
+      if (!otherRules.required && length === 0) {
+        return false;
+      }
+      return returnValue;
+    },
+    maxlength : function ($el, max) {
+      var diff = $.trim($el.val()).length - max;
+      return (diff > 0) ? diff + ' character(s) too long' : false;
     }
   };
 
@@ -35,16 +45,18 @@
     self.errorElementsCache = {};
     self.containerCache = {};
     self.elementRulesCache = {}
+    self.shouldShowErrors = {};
     self.options = $.extend({}, defaultOptions, config.options);
     self.ruleSelectors = $.extend({}, defaultRuleSelectors, config.ruleSelectors);
     self.rules = $.extend({}, defaultRules, config.rules);
     self.options.ignore = self.options.ignore.join(',');
     self.myForm = form;
+    form.prop('novalidate', 'novalidate');
     self.inputs = form.find('input, button, textarea, select').not(self.options.ignore);
     $.each(self.inputs, function (index, input) {
       var $el = $(input);
       var elementRules;
-      if ($el.attr('name')) {
+      if ($el.prop('name')) {
         elementRules = self.cachedElementRules($el);
         if (elementRules.minlength) {
           self.cachedErrorElement($el).html(self.options.counter($el, elementRules.minlength));
@@ -58,7 +70,7 @@
   $.extend(Validator.prototype, {
     cachedElementRules : function ($el) {
       var self = this;
-      var name = $el.attr('name');
+      var name = $el.prop('name');
       var elementRules = {};
       if (self.elementRulesCache[name]) {
         return self.elementRulesCache[name];
@@ -74,12 +86,12 @@
       return self.elementRulesCache[name];
     },
     cachedErrorElement : function ($el) {
-      var name = $el.attr('name');
+      var name = $el.prop('name');
       this.errorElementsCache[name] = this.errorElementsCache[name] || this.options.errorElement($el);
       return this.errorElementsCache[name];
     },
     cachedContainer : function ($el) {
-      var name = $el.attr('name');
+      var name = $el.prop('name');
       this.containerCache[name] = this.containerCache[name] || this.options.container($el);
       return this.containerCache[name];
     },
@@ -102,22 +114,29 @@
       $.extend(this.cachedElementRules($el), rules);
       return this;
     },
+    counter : function (el) {
+      var $el = $(el);
+      var minlength = this.cachedElementRules($el).minlength;
+      if (minlength) {
+        this.cachedErrorElement($el).html(this.options.counter($el, minlength));
+      }
+    },
     setupHandlers : function () {
       //console.log('init', this);
       var self = this;
 
       function checkEl (e) {
         var $el = $(e.currentTarget);
-        var name = $el.attr('name');
-        var elementRules;
+        var name = $el.prop('name');
         if (name) {
-          elementRules = self.cachedElementRules($el);
-          if (e.type === 'keyup') {
-            if (elementRules.minlength) {
-              self.cachedErrorElement($el).html(self.options.counter($el, elementRules.minlength));
-            }
+          if ($.trim($el.val()).length === 0) {
+            self.cachedContainer($el).removeClass(self.options.validClass + ' ' + self.options.errorClass);
+            delete self.shouldShowErrors[name];
           }
-          if ((e.type === 'focusout' || e.type === 'change' || name in self.containerCache) && $el.not(self.options.ignore)) {
+          if (e.type === 'keyup') {
+            self.counter($el);
+          }
+          if ((e.type === 'focusout' || e.type === 'change' || name in self.shouldShowErrors) && $el.not(self.options.ignore)) {
             self.check($el);
           }
         }
@@ -128,7 +147,6 @@
         .on('change', '[type=radio], [type=checkbox], select, option', checkEl);
 
       self.myForm.submit(function (e) {
-        e.preventDefault();
         if (!self.valid()) {
           return false;
         }
@@ -139,18 +157,26 @@
         return true;
       });
     },
+    element : function (el) {
+      return this.check($(el));
+    },
     check : function ($el) {
       var self = this;
-      var name = $el.attr('name');
-      var errorElement;
-      var container;
+      var name = $el.prop('name');
       var error = false;
+      var $validationEl = $el;
+      var elementRules;
       // only validate elements with names
       if (name) {
-        $.each(self.cachedElementRules($el), function (rule, param) {
-          var ruleFailed = self.rules[rule]($el, param);
+        if ($el.is(':radio, :checkbox')) {
+          $validationEl = self.myForm.find('[name="' + name + '"]').filter(':checked');
+        }
+        elementRules = self.cachedElementRules($el);
+        $.each(elementRules, function (rule, param) {
+          var ruleFailed = self.rules[rule]($validationEl, param, elementRules);
           if (ruleFailed) {
             error = ruleFailed;
+            self.options.onError.call(self, $el, rule);
           }
         });
         if (error) {
@@ -160,6 +186,7 @@
           self.cachedErrorElement($el).html('');
           self.cachedContainer($el).removeClass(self.options.errorClass).addClass(self.options.validClass);
         }
+        self.shouldShowErrors[name] = true;
         return !error;
       }
       return true;
@@ -169,7 +196,7 @@
       var self = this;
       var valid = true;
       $(self.inputs).each(function (index, input) {
-        valid = self.check($(input)) && valid;
+        valid = self.element(input) && valid;
       });
       return valid;
     }
@@ -183,4 +210,23 @@
     return new Validator(config || {}, $(this[0]));
   };
 
-})(Zepto);
+  $.format = function(source, params) {
+    if ( arguments.length == 1 )
+      return function() {
+        var args = $.makeArray(arguments);
+        args.unshift(source);
+        return $.validator.format.apply( this, args );
+      };
+    if ( arguments.length > 2 && params.constructor != Array  ) {
+      params = $.makeArray(arguments).slice(1);
+    }
+    if ( params.constructor != Array ) {
+      params = [ params ];
+    }
+    $.each(params, function(i, n) {
+      source = source.replace(new RegExp("\\{" + i + "\\}", "g"), n);
+    });
+    return source;
+  };
+
+})(jQuery);
