@@ -14,11 +14,16 @@
  *   http://www.gnu.org/licenses/gpl.html
  */
 
-(function( $ ) {
+(function($) {
 
-  $.toolegit = {};
+  window.TooLegit = function($form, config) {
+    if (!$form.length) {
+      return;
+    }
+    return new Validator(config || {}, $form.first());
+  };
 
-  var defaultOptions = $.toolegit.defaultOptions = {
+  var defaultOptions = TooLegit.defaultOptions = {
     errorClass : 'error',
     validClass : 'success',
     ignore : ['.ignore'],
@@ -36,7 +41,7 @@
     submit : null //function () { console.log('submit!'); }
   };
 
-  var defaultRules = $.toolegit.defaultRules = {
+  var defaultRules = TooLegit.defaultRules = {
     required : function ($el, required) {
       var noValue = $el.is('[type=radio], [type=checkbox]') ? !$el.length : !$.trim($el.val());
       return (required && noValue) ? 'required' : false;
@@ -56,16 +61,18 @@
     }
   };
 
-  var defaultRuleSelectors = $.toolegit.defaultRuleSelectors = {
+  var defaultRuleSelectors = TooLegit.defaultRuleSelectors = {
     // selector : { rule : param }
   };
 
   var Validator = function (config, form) {
     var self = this;
-    self.errorElementsCache = {};
-    self.containerCache = {};
-    self.elementRulesCache = {}
-    self.shouldShowErrors = {};
+    self.cache = {
+      errorElements : {},
+      elementRules : {},
+      containers : {},
+      shouldShowErrors : {}
+    };
     self.options = $.extend({}, defaultOptions, config.options);
     self.ruleSelectors = $.extend({}, defaultRuleSelectors, config.ruleSelectors);
     self.rules = $.extend({}, defaultRules, config.rules);
@@ -92,28 +99,28 @@
       var self = this;
       var name = $el.prop('name');
       var elementRules = {};
-      if (self.elementRulesCache[name]) {
-        return self.elementRulesCache[name];
+      if (self.cache.elementRules[name]) {
+        return self.cache.elementRules[name];
       }
-      self.elementRulesCache[name] = {}
+      self.cache.elementRules[name] = {}
       $.each(self.ruleSelectors, function (selector, rules) {
         if ($el.is(selector)) {
           $.each(rules, function (rule, param) {
-            self.elementRulesCache[name][rule] = param;
+            self.cache.elementRules[name][rule] = param;
           });
         }
       });
-      return self.elementRulesCache[name];
+      return self.cache.elementRules[name];
     },
     cachedErrorElement : function ($el) {
       var name = $el.prop('name');
-      this.errorElementsCache[name] = this.errorElementsCache[name] || this.options.errorElement($el);
-      return this.errorElementsCache[name];
+      this.cache.errorElements[name] = this.cache.errorElements[name] || this.options.errorElement($el);
+      return this.cache.errorElements[name];
     },
     cachedContainer : function ($el) {
       var name = $el.prop('name');
-      this.containerCache[name] = this.containerCache[name] || this.options.container($el);
-      return this.containerCache[name];
+      this.cache.containers[name] = this.cache.containers[name] || this.options.container($el);
+      return this.cache.containers[name];
     },
     addRule : function (ruleName, ruleFn) {
       this.rules[ruleName] = ruleFn;
@@ -155,12 +162,12 @@
         if (name) {
           if ($.trim($el.val()).length === 0) {
             self.cachedContainer($el).removeClass(self.options.validClass + ' ' + self.options.errorClass);
-            delete self.shouldShowErrors[name];
+            delete self.cache.shouldShowErrors[name];
           }
           if (e.type === 'keyup') {
             self.counter($el);
           }
-          if ((e.type === 'focusout' || e.type === 'change' || name in self.shouldShowErrors) && $el.not(self.options.ignore)) {
+          if ((e.type === 'focusout' || e.type === 'change' || name in self.cache.shouldShowErrors) && $el.not(self.options.ignore)) {
             self.check($el);
           }
         }
@@ -172,7 +179,7 @@
 
       self.myForm.submit(function (e) {
         //e.preventDefault();
-        self.options.preSubmit.call(self);
+        self.options.preSubmit.call(self, e);
         if (!self.valid()) {
           return false;
         }
@@ -208,11 +215,12 @@
         if (error) {
           self.cachedErrorElement($el).html(error);
           self.cachedContainer($el).addClass(self.options.errorClass).removeClass(self.options.validClass);
-        } else {
+        }
+        else {
           self.cachedErrorElement($el).html('');
           self.cachedContainer($el).removeClass(self.options.errorClass).addClass(self.options.validClass);
         }
-        self.shouldShowErrors[name] = true;
+        self.cache.shouldShowErrors[name] = true;
         return !error;
       }
       return true;
@@ -227,12 +235,5 @@
       return valid;
     }
   });
-
-  $.fn.toolegit = function(config) {
-    if (!this.length) {
-      return;
-    }
-    return new Validator(config || {}, $(this[0]));
-  };
 
 })(Zepto || jQuery);
