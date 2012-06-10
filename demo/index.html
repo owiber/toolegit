@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Demo Form</title>
+  <link href="bootstrap.css" media="screen" rel="stylesheet" type="text/css" />
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script src="http://zeptojs.com/zepto.js"></script>
+  <script src="../toolegit.js"></script>
+</head>
+<body>
+
+<form id="form1" class="form-horizontal well">
+  <fieldset>
+    <div class="control-group">
+      <label class="control-label" for="input01">Text input</label>
+      <div class="controls">
+        <input name="input01" type="text" class="input-xlarge tl-required" id="input01">
+        <p class="help-block">In addition to freeform text, any HTML5 text-based input appears like so.</p>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="optionsCheckbox">Checkbox</label>
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" name="optionsCheckbox" id="optionsCheckbox" value="option1">
+          Option one is this and that—be sure to include why it's great
+        </label>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="select01">Select list</label>
+      <div class="controls">
+        <select id="select01" name="select01" class="required">
+          <option value="">something</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+        </select>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="multiSelect">Multicon-select</label>
+      <div class="controls">
+        <select multiple="multiple" id="multiSelect" name="multiSelect">
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+        </select>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="fileInput">File input</label>
+      <div class="controls">
+        <input class="input-file" id="fileInput" name="fileInput" type="file">
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="textarea">Textarea</label>
+      <div class="controls">
+        <textarea class="input-xlarge" id="textarea" name="textarea" rows="3"></textarea>
+        <span class="help-block"></span>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save changes</button>
+      <button id="cancelBtn" class="btn">Cancel</button>
+    </div>
+  </fieldset>
+</form>
+
+<form id="form2" class="well">
+  <label>Label name</label>
+  <input type="text" class="span3" placeholder="Type something…">
+  <span class="help-block">Example block-level help text here.</span>
+  <label class="checkbox">
+    <input type="checkbox"> Check me out
+  </label>
+  <button type="submit" class="btn">Submit</button>
+</form>
+
+<script>
+
+var validator = Zepto('.well').toolegit({
+  ruleSelectors : {
+    '[name=input01]' : {
+      minlength: 10
+    }
+  }
+});
+
+validator
+  .addRule('textarea-server', function () {
+    return 'server side error';
+  })
+  .addSelectorRules($('#textarea'), { 'textarea-server' : true });
+
+$('#cancelBtn').click(function () {
+  //validator.removeSelectorRules($('#textarea'), { 'textarea-server' : true })
+  validator.removeRule('textarea-server');
+});
+
+</script>
+
+</body>
+</html>
