@@ -4,8 +4,9 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Demo Form</title>
   <link href="bootstrap.css" media="screen" rel="stylesheet" type="text/css" />
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <!--script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script-->
   <script src="http://zeptojs.com/zepto.js"></script>
+  <script src="selector.js"></script>
   <script src="../toolegit.js"></script>
 </head>
 <body>
@@ -86,7 +87,8 @@
 
 var validator = Zepto('.well').toolegit({
   ruleSelectors : {
-    '[name=input01]' : {
+    '[name="input01"]' : {
+      required : true,
       minlength: 10
     }
   }

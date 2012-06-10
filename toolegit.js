@@ -22,6 +22,7 @@
     errorClass : 'error',
     validClass : 'success',
     ignore : ['.ignore'],
+    onError : function () {},
     errorElement : function ($el) {
       return $el.closest('.control-group').find('.help-block');
     },
@@ -31,12 +32,13 @@
     counter : function ($el, min) {
       return Math.max(0, min - $.trim($el.val()).length) || '';
     },
+    preSubmit : function () {},
     submit : null //function () { console.log('submit!'); }
   };
 
   var defaultRules = $.toolegit.defaultRules = {
     required : function ($el, required) {
-      var noValue = $el.is(':radio, :checkbox') ? !$el.length : !$.trim($el.val());
+      var noValue = $el.is('[type=radio], [type=checkbox]') ? !$el.length : !$.trim($el.val());
       return (required && noValue) ? 'required' : false;
     },
     minlength : function ($el, min, otherRules) {
@@ -117,9 +119,13 @@
       this.rules[ruleName] = ruleFn;
       return this;
     },
-    removeRule : function (ruleName, ruleFn) {
-      this.rules[ruleName] = function () { return false; };
-      return this;
+    removeRule : function (ruleName) {
+      var self = this;
+      var rules = $.isArray(ruleName) ? ruleName : [ruleName];
+      $.each(rules, function (index, rule) {
+        self.rules[rule] = function () { return false; };
+      })
+      return self;
     },
     removeSelectorRules : function ($el, rules) {
       var elementRules = this.cachedElementRules($el);
@@ -165,6 +171,8 @@
         .on('change', '[type=radio], [type=checkbox], select, option', checkEl);
 
       self.myForm.submit(function (e) {
+        //e.preventDefault();
+        self.options.preSubmit.call(self);
         if (!self.valid()) {
           return false;
         }
@@ -186,7 +194,7 @@
       var elementRules;
       // only validate elements with names
       if (name) {
-        if ($el.is(':radio, :checkbox')) {
+        if ($el.is('[type=radio], [type=checkbox]')) {
           $validationEl = self.myForm.find('[name="' + name + '"]').filter(':checked');
         }
         elementRules = self.cachedElementRules($el);
@@ -227,4 +235,4 @@
     return new Validator(config || {}, $(this[0]));
   };
 
-})(jQuery);
+})(Zepto || jQuery);
