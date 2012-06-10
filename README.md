@@ -10,7 +10,7 @@ Usage
 This is a work in progress...
 
 ```javascript
-$('#form1').toolegit({
+var validator = TooLegit($('#form1'), {
   ruleSelectors : {
     '.required' : {
       required : true
