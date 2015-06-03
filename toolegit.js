@@ -238,4 +238,4 @@
 
   context.TooLegit = TooLegit;
 
-})(Zepto || jQuery, window);
+})(window.Zepto || window.jQuery, window);
